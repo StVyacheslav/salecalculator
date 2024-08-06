@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор скидок</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .centered {
+            display: block;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4180B7;
+        }
+        p {
+            color: #333;
+        }
+        .important {
+            font-weight: bold;
+            color: #4180B7;
+        }
+        select, input[type="text"] {
+            width: 200px;
+            margin: 10px auto;
+            display: block;
+        }
+        footer img {
+            width: 100%;
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <img src="https://static.tildacdn.com/tild6533-3539-4337-a130-623533643962/-_1_.png" alt="Логотип" width="150" height="50" class="centered">
+    
+    <h1>КАЛЬКУЛЯТОР СКИДОК</h1>
+
+    <p>
+        Обращаем Ваше внимание, что данный калькулятор является примерным для расчета стоимости квартиры.
+    </p>
+    <p>
+        Получить подробную консультацию вы сможете по нашему телефону отдела продаж <a href="tel:+74732212121" class="important">8 (473) 221-21-21</a>.
+    </p>
+
+    <label for="jkc">Выберите ЖК, в котором рассматриваете квартиру:</label>
+    <select id="jkc">
+        <option value="Волна">ЖК Волна</option>
+        <option value="Ю1">ЖК Ю (Позиция 1)</option>
+        <option value="Ю2">ЖК Ю (Позиция 2)</option>
+        <option value="Александровский сад">ЖК Александровский сад</option>
+    </select>
+
+    <label for="price">Укажите стоимость квартиры:</label>
+    <input type="text" id="price" placeholder="₽">
+
+    <label for="subsidy">Выберите процент субсидирования со стороны Застройщика (ГК «Еврострой»):</label>
+    <select id="subsidy">
+        <option value="3.5">3.5%</option>
+        <option value="6">6%</option>
+    </select>
+
+    <label for="period">Выберите период субсидирования:</label>
+    <select id="period">
+        <option value="1">1 год</option>
+        <option value="2">2 года</option>
+        <option value="3">3 года</option>
+        <option value="5">5 лет</option>
+        <option value="all">Весь период</option>
+    </select>
+
+    <p id="discount-result"></p>
+
+    <label for="initial">Введите сумму первоначального взноса (минимальный взнос - 20%):</label>
+    <input type="text" id="initial" placeholder="₽">
+
+    <label for="loan-term">Введите срок кредитования (в мес.):</label>
+    <input type="text" id="loan-term" placeholder="мес.">
+
+    <p id="monthly-payment"></p>
+    <p id="post-subsidy-payment"></p>
+
+    <p>Подробные условия ипотечного кредитования рекомендуем уточнять непосредственно в банке.</p>
+
+    <footer>
+        <img src="https://bronk.club/uploads/posts/2023-02/1676371460_bronk-club-p-otkritka-s-dnem-arkhitektora-vkontakte-8.jpg" alt="Footer Image">
+    </footer>
+
+    <script>
+        function calculateDiscount() {
+            const jkc = document.getElementById('jkc').value;
+            const price = parseFloat(document.getElementById('price').value.replace(/\s/g, ''));
+            const subsidy = parseFloat(document.getElementById('subsidy').value);
+            const period = document.getElementById('period').value;
+
+            let discount = 0;
+            if (subsidy === 6) {
+                discount = 10;
+            } else if (subsidy === 3.5) {
+                if (jkc === 'Ю1' || jkc === 'Ю2' || jkc === 'Александровский сад') {
+                    switch (period) {
+                        case '1': discount = 7; break;
+                        case '2': discount = 6; break;
+                        case '3': discount = 5; break;
+                        case '5': discount = 4; break;
+                        case 'all': discount = 0; break;
+                    }
+                } else if (jkc === 'Волна') {
+                    switch (period) {
+                        case '1': discount = 9; break;
+                        case '2': discount = 8; break;
+                        case '3': discount = 7; break;
+                        case '5': discount = 6; break;
+                        case 'all': discount = 0; break;
+                    }
+                }
+            }
+
+            const discountAmount = (price * discount) / 100;
+            const discountedPrice = price - discountAmount;
+
+            document.getElementById('discount-result').innerHTML = `
+                Ваша скидка составит - ${discountAmount.toLocaleString('ru-RU')} рублей (${discount}%).
+                Общая стоимость квартиры составит ${discountedPrice.toLocaleString('ru-RU')} рублей.
+            `;
+
+            calculateMonthlyPayment(discountedPrice);
+        }
+
+        function calculateMonthlyPayment(discountedPrice) {
+            const initial = parseFloat(document.getElementById('initial').value.replace(/\s/g, ''));
+            const loanTerm = parseFloat(document.getElementById('loan-term').value);
+            const subsidy = parseFloat(document.getElementById('subsidy').value);
+
+            const loanAmount = discountedPrice - initial;
+            const monthlyRate = subsidy / 100 / 12;
+
+            const monthlyPayment = (loanAmount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -loanTerm));
+            document.getElementById('monthly-payment').innerHTML = `
+                Ваш ежемесячный платеж составит в период субсидирования: ${monthlyPayment.toLocaleString('ru-RU')} рублей.
+            `;
+
+            const postSubsidyRate = 6 / 100 / 12;
+            const postSubsidyPayment = (loanAmount * postSubsidyRate) / (1 - Math.pow(1 + postSubsidyRate, -loanTerm));
+            document.getElementById('post-subsidy-payment').innerHTML = `
+                Ваш ежемесячный платеж составит после субсидирования: ${postSubsidyPayment.toLocaleString('ru-RU')} рублей.
+            `;
+        }
+
+        document.getElementById('subsidy').addEventListener('change', function () {
+            if (this.value === '6') {
+                document.getElementById('period').disabled = true;
+            } else {
+                document.getElementById('period').disabled = false;
+            }
+            calculateDiscount();
+        });
+
+        document.getElementById('jkc').addEventListener('change', calculateDiscount);
+        document.getElementById('period').addEventListener('change', calculateDiscount);
+        document.getElementById('price').addEventListener('input', calculateDiscount);
+        document.getElementById('initial').addEventListener('input', calculateDiscount);
+        document.getElementById('loan-term').addEventListener('input', calculateDiscount);
+
+        calculateDiscount();
+    </script>
+</body>
+</html>
